@@ -1,71 +1,77 @@
+const { createClient } = require('@deepgram/sdk');
 const { supabase } = require('./../supabaseClient');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
+const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const multer = require('multer');
 
-// For Buffer Storage
-const multerStorage = multer.memoryStorage();
+// Deepgram Client
+const deepgram = createClient(process.env.Deepgram_API_KEY);
 
-const multerFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('audio')) {
-    cb(null, true);
-  } else {
-    cb(
-      new AppError('Not an audio file! Please upload an audio file.', 400),
-      false
-    );
-  }
-};
-
-const upload = multer({
-  storage: multerStorage,
-  fileFilter: multerFilter
-});
-
-exports.uploadAudio = upload.array('audio', 4); // max 4 audio files
+// Multer setup for multiple files
+const upload = multer({ dest: 'temp_audio/' });
+exports.uploadAudio = upload.array('audio', 4); // Allow up to 4 files
 
 exports.handleAudioUpload = catchAsync(async (req, res, next) => {
   if (!req.files || req.files.length === 0) {
-    return next(new AppError('No Audio file uploaded', 400));
+    return next(new AppError('No audio files uploaded!', 400));
   }
 
-  const uploadedFiles = [];
+  const results = [];
 
   for (const file of req.files) {
-    const fileExt = file.originalname.split('.').pop();
-    const fileName = `audio-${Date.now()}.${fileExt}`;
-    const filePath = `audio/${fileName}`;
+    const originalExt = path.extname(file.originalname);
+    const newFileName = `audio-${Date.now()}-${Math.random().toString(36).substring(7)}${originalExt}`;
+    const tempPath = file.path;
+    const newFilePath = path.join('temp_audio', newFileName);
 
-    // Store file in supabase
+    // Rename with extension
+    fs.renameSync(tempPath, newFilePath);
+
+    const audioBuffer = fs.readFileSync(newFilePath);
+
+    // Upload to Supabase
     const { error: uploadError } = await supabase.storage
       .from('audio')
-      .upload(filePath, file.buffer, {
+      .upload(`audio/${newFileName}`, audioBuffer, {
         contentType: file.mimetype
       });
 
     if (uploadError) {
-      console.log('Upload Error:', uploadError.message);
-      continue;
+      fs.unlinkSync(newFilePath);
+      continue; // Skip this file and move on
     }
 
-    const { error: dbError } = await supabase
-      .from('Transcription')
-      .insert([{ filename: fileName }]);
+    await supabase.from('Transcription').insert([{ filename: newFileName }]);
 
-    if (dbError) {
-      console.log('DB Error:', dbError.message);
-      continue;
+    // Transcribe
+    const { result, error } = await deepgram.listen.prerecorded.transcribeFile(
+      audioBuffer,
+      { smart_format: true, model: 'nova-2', language: 'en-US' }
+    );
+
+    let transcript = '';
+    if (!error) {
+      transcript = result.results.channels[0].alternatives[0].transcript;
+
+      await supabase
+        .from('Transcription')
+        .update({ transcription: transcript })
+        .eq('filename', newFileName);
     }
 
-    uploadedFiles.push(fileName);
+    // Clean up
+    fs.unlinkSync(newFilePath);
+
+    results.push({
+      file: newFileName,
+      transcript: transcript || 'Transcription failed'
+    });
   }
 
   res.status(200).json({
     status: 'success',
-    data: {
-      files: uploadedFiles
-    }
+    data: results
   });
 });
