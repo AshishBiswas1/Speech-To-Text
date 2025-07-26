@@ -16,5 +16,8 @@
     "url": "https://github.com/AshishBiswas1/Speech-To-Text/issues"
   },
   "homepage": "https://github.com/AshishBiswas1/Speech-To-Text#readme",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "dotenv": "^17.2.1"
+  }
 }
