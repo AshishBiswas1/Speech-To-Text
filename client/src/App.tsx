@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import AudioUploader from "./components/AudioUploader";
 import TranscriptionResult from "./components/TranscriptionResult";
 import Loader from "./components/Loader";
