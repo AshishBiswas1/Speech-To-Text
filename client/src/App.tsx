@@ -21,7 +21,7 @@ export default function App() {
       const formData = new FormData();
       formData.append("audio", audioFile);
 
-      const response = await fetch("http://localhost:5000/transcribe", {
+      const response = await fetch("http://localhost:3000/upload", {
         method: "POST",
         body: formData,
       });
