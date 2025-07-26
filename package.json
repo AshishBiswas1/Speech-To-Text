@@ -18,6 +18,8 @@
   "homepage": "https://github.com/AshishBiswas1/Speech-To-Text#readme",
   "description": "",
   "dependencies": {
-    "dotenv": "^17.2.1"
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^4.18.2"
   }
 }
