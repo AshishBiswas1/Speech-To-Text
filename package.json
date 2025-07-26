@@ -1,0 +1,20 @@
+{
+  "name": "speech-to-text_transcription",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "heroku-postbuild": "cd client && npm install && npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AshishBiswas1/Speech-To-Text.git"
+  },
+  "author": "Ashish Biswas",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AshishBiswas1/Speech-To-Text/issues"
+  },
+  "homepage": "https://github.com/AshishBiswas1/Speech-To-Text#readme",
+  "description": ""
+}

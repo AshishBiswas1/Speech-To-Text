@@ -1,11 +1,14 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const transcribeRouter = require('./Routes/transcribeRouter');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controller/errorController');
 
 const app = express();
+
+app.use(express.static(path.join(__dirname, '../client/dist')));
 
 // Middleware
 app.use(cors());
