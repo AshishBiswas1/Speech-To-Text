@@ -27,13 +27,10 @@ export default function App() {
         formData.append("audio", file);
       });
 
-      const response = await fetch(
-        "http://localhost:3000/api/transcribe/upload",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const response = await fetch("/api/transcribe/upload", {
+        method: "POST",
+        body: formData,
+      });
 
       if (!response.ok) throw new Error("Server error!");
       const data = await response.json();
