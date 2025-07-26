@@ -1,9 +1,7 @@
-import React, { useRef, useState } from "react";
-import type { JSX } from "react";
-import type { ChangeEvent, KeyboardEvent, DragEvent } from "react";
+import React, { useRef, useState, type JSX } from "react";
 
 interface AudioUploaderProps {
-  onUpload: (file: File) => void;
+  onUpload: (files: FileList | File[]) => void;
 }
 
 export default function AudioUploader({
@@ -12,32 +10,37 @@ export default function AudioUploader({
   const fileInput = useRef<HTMLInputElement | null>(null);
   const [dragActive, setDragActive] = useState(false);
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>): void => {
-    const file = e.target.files?.[0];
-    if (file && file.type.startsWith("audio/")) onUpload(file);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      onUpload(files);
+    }
   };
 
-  const handleDragEnter = (e: DragEvent<HTMLDivElement>): void => {
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>): void => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(true);
   };
 
-  const handleDragLeave = (e: DragEvent<HTMLDivElement>): void => {
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>): void => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
   };
 
-  const handleDrop = (e: DragEvent<HTMLDivElement>): void => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>): void => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith("audio/")) onUpload(file);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      onUpload(files);
+    }
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>): void => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>): void => {
     if (e.key === "Enter" || e.key === " ") {
       fileInput.current?.click();
     }
@@ -59,10 +62,11 @@ export default function AudioUploader({
         ref={fileInput}
         type="file"
         accept="audio/*"
+        multiple // <-- Enable multiple file selection
         style={{ display: "none" }}
         onChange={handleFileChange}
       />
-      <p>Drag & drop an audio file here, or click to select a file</p>
+      <p>Drag & drop audio files here, or click to select files</p>
       <button className="upload-btn" type="button">
         Upload Audio
       </button>
