@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import AudioUploader from "./components/AudioUploader";
 import TranscriptionResult from "./components/TranscriptionResult";
 import Loader from "./components/Loader";
@@ -6,6 +6,10 @@ import Notification from "./components/Notification";
 import "./App.css";
 
 export default function App() {
+  useEffect(() => {
+    document.title = "Audio Transcriber";
+  });
+
   // State for multiple transcripts: array of objects {file, transcript}
   const [transcripts, setTranscripts] = useState<
     Array<{ file: string; transcript: string }>
