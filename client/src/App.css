@@ -21,31 +21,46 @@ body, html, #root {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: var(--grey-light);
   color: var(--text-dark);
+  overflow-y: auto;
 }
 
-.app-container {
+/* Wrapper providing sticky footer layout */
+.app-outer {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
+}
+
+/* Main content container */
+.app-container {
+  flex: 1 0 auto;
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;         /* Align panels to the very top */
   justify-content: center;
-  padding: 2rem;
+  padding: 0 2rem 2rem 2rem;      /* Remove top padding, side/bottom keep */
   background: var(--background-white);
+  box-sizing: border-box;
+  gap: 2rem;
 }
 
 .card {
   background: var(--background-white);
-  padding: 2.5rem 3rem;
+  padding: 0.4rem 3rem 2.5rem 3rem; /* Much less top padding */
   border-radius: var(--border-radius);
   box-shadow: 0 4px 15px var(--shadow-soft);
   max-width: 700px;
   width: 100%;
   text-align: center;
+  margin-top: 0;                   /* Remove any top margin */
 }
 
 .title {
   color: var(--primary-orange);
   font-weight: 700;
+  margin-top: 0 !important;        /* Remove default h1 margin top */
   margin-bottom: 1.5rem;
   font-size: 2.4rem;
   user-select: none;
@@ -191,25 +206,58 @@ body, html, #root {
 }
 
 .footer {
-  margin-top: 3rem;
+  flex-shrink: 0;
+  margin-top: 0;
   color: var(--text-light);
   font-size: 0.9rem;
   user-select: none;
+  text-align: center;
+  padding: 1rem 0 1.5rem 0;
+  background: var(--background-white);
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10%);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Record Audio Button styles */
+.record-btn {
+  margin-top: 1rem;
+  background-color: var(--primary-orange);
+  color: white;
+  width: 100%;
+  padding: 0.75rem;
+  font-weight: 600;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  user-select: none;
+  box-shadow: 0 4px 10px rgba(255, 120, 0, 0.4);
+  transition: background var(--transition), box-shadow var(--transition);
+}
+
+.record-btn:hover,
+.record-btn:focus {
+  background-color: var(--primary-orange-dark);
+  box-shadow: 0 6px 18px rgba(204, 98, 0, 0.6);
+  outline: none;
+}
+
+.record-btn.stop {
+  background-color: #cc0000;
+  box-shadow: 0 4px 10px rgba(204, 0, 0, 0.4);
+}
+
+.record-btn.stop:hover,
+.record-btn.stop:focus {
+  background-color: #990000;
+  box-shadow: 0 6px 18px rgba(153, 0, 0, 0.6);
+  outline: none;
 }
 
 /* Responsive */
 @media (max-width: 600px) {
+  .app-container {
+    flex-direction: column;
+    padding: 1rem;
+  }
   .card {
     padding: 1.5rem 1.8rem;
   }

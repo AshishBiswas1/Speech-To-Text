@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import AudioUploader from "./components/AudioUploader";
 import TranscriptionResult from "./components/TranscriptionResult";
 import Loader from "./components/Loader";
@@ -14,7 +14,12 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [audioNames, setAudioNames] = useState<string[]>([]);
 
-  // Handle multiple files upload
+  // New states for recording
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<BlobPart[]>([]);
+
+  // Handle multiple files upload (existing)
   const handleUpload = async (audioFiles: FileList | File[]) => {
     setLoading(true);
     setError("");
@@ -27,6 +32,7 @@ export default function App() {
         formData.append("audio", file);
       });
 
+      // REMINDER: Change your URL to use relative path in production!
       const response = await fetch("/api/transcribe/upload", {
         method: "POST",
         body: formData,
@@ -52,11 +58,102 @@ export default function App() {
     setAudioNames([]);
   };
 
+  // ------ New: recording handling ------
+
+  // Start recording audio from microphone
+  const startRecording = async () => {
+    setError("");
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setError("Browser does not support audio recording.");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      recordedChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunksRef.current, {
+          type: "audio/webm",
+        });
+        const file = new File([blob], `recording_${Date.now()}.webm`, {
+          type: "audio/webm",
+        });
+
+        // Send the recorded file to your existing upload handler
+        handleUpload([file]);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      setError("Could not start recording: " + (err as Error).message);
+    }
+  };
+
+  // Stop the recording
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  // ------------------------------------
+
   return (
     <div className="app-container">
       <div className="left-panel card">
         <h1 className="title">Speech to Text Transcription</h1>
         <AudioUploader onUpload={handleUpload} />
+
+        {/* Record Audio Button */}
+        {!isRecording ? (
+          <button
+            className="record-btn"
+            onClick={startRecording}
+            style={{
+              marginTop: "1rem",
+              backgroundColor: "var(--primary-orange)",
+              color: "white",
+              width: "100%",
+              padding: "0.75rem",
+              fontWeight: "600",
+              borderRadius: "5px",
+              border: "none",
+              cursor: "pointer",
+            }}
+            aria-label="Start recording audio"
+          >
+            Start Recording
+          </button>
+        ) : (
+          <button
+            className="record-btn stop"
+            onClick={stopRecording}
+            style={{
+              marginTop: "1rem",
+              backgroundColor: "#cc0000",
+              color: "white",
+              width: "100%",
+              padding: "0.75rem",
+              fontWeight: "600",
+              borderRadius: "5px",
+              border: "none",
+              cursor: "pointer",
+            }}
+            aria-label="Stop recording audio"
+          >
+            Stop Recording
+          </button>
+        )}
 
         {audioNames.length > 0 && (
           <div className="audio-file-info">
